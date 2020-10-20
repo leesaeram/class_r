@@ -1,0 +1,94 @@
+---
+title: "CH5.5.3"
+author: "Han Kwang su"
+date: '2020 10 18 '
+output: html_document
+---
+
+## 5.5.3 자료 그룹들 살펴보기
+by 라는 함수를 소개하고 제3장에 나온subset()함수를 꺼내려한다
+이함수들은 특정 그룹화 변수로 자료를 분활하거나 사례들의 부분집합을 선택하는 용도로 쓰인다.
+
+### 5.5.3.1 자료 전체의 분석
+
+가장먼저 행야할알 은 RExam.dat의자료를 불어오는것이다
+
+```{r}
+rexam <- read.delim("rexam.dat", header = TRUE)
+```
+uni 변수에는 대학교 이름 문자열이 아니라 수치들이 적재된다
+자료파일에 그렇게 지정되어 있기때문이다 uni를 다음 명령을 이용해서 요인으로 변환한다
+
+```{r}
+rexam$uni<-factor{rexam$uni, levels = c(0:1), labels = c("duncetown university","sussex university")}
+```
+
+
+이 명령에서 rexam$uni는 rexam 데이터프레임의 uni변수를 뜻한다.levels =c(0:1)은 두대학교를 0과1이라는 값으로 부호화하라는 뜻이고 labels =c("Duncetown university","sussex university")는 0에 던스타운 대학교 1에 서섹스 대학교에 해당하는 이름표를 배정하라는 뜻이다
+
+### 5.5.3.2 그룹별 분석
+대학교별로 기술통계량을 얻고 싶다면 by()함수를 사용하면된다,by()함수의 일반적인 형태는 다음과같다
+
+```{r}
+by(data = 분석할 자료 , INDICES = 그룹화 변수, FUN = describe)
+
+describe() 대신 stat.desc()를 사용하고 싶다면 다음을 실행하면된다
+
+by(data = rexam$exam, INDICES = rexam$uni, FUN = stst.desc)
+```
+두경우 모두, 만일 data,INDICES,FUN 옵션들을 위와 같은 순서로 지정할 때는 다음과 같이 그냥 옵션(인수) 이름들을 생략해도된다
+
+```{r}
+by(rexam$exam, rexam$uni, decribe)
+
+by(rexam$exam, rexam$uni, stat.desc)
+
+마지막으로 여기에 또다른 옵션들을 덧붙일수 있다 예를 들어stat.desc()를 사용하는 경우 기초 통계량은 출력하지 않고 정규성 관련 통계량을 출력하고 싶다면 다음과같이하면된다
+
+```{r}
+by(rexam$exam, rexam$uni, stat.desc, basic = FALSE, norm = TRUE)
+```
+여러 변수에 대한 기술 통계량을 원한다면 by()안에서 cbind()로여러변수를  묶어주면된다.다음은 r시험 점수와 수치 계산력 점수의 기술통계량 을 출력하는 방법이다
+
+```{r}
+by(cbind(data=rexam$exam,data=rexam$numeracy),rexam$uni, describe)
+또는 다음과같이 c()로 묶을수있다
+
+by(rexam[, c("exam","numeracy")], rexam$uni, stat.desc, basic = FALSE, norm = TRUE)
+```
+
+## 5.6.1  분포의 정규성 검정
+전체적인 자료의 분포가 그와 비교 가능한 정규분포에서 얼마나 벗어나 이는지파악하는 또다른 방법으로 샤피로-월크 검정이라는 것이 있다.이검정은 표본과 평균과 표준편차가같은 정규분포에서 뽑은 점수들과 비교한다그러나 이검정에는 한계가있다표본이 크면 정규분포를 조금만 벗어나도 유의한 결과가 나오기 쉽다는 점을 고려해야 한다.
+
+### 5.6.2 R에서 샤피로_윌크 검정 실행하기
+
+이함수의 일반적인 형태는 다음과같다
+```{r}
+shapiro.test(변수)
+```
+변수는 정규성을 감정할 변수의 이름 이다 예를들어 exam 변수와 numeracy 변수의 정규성을 검증하고싶다면 다음 명령 들을 실행하면 된다
+
+```{r}
+shapiro.test(rexam$exam)
+
+shapiro.test(rexam$numeracy)
+```
+
+by()를 이용해서 실제로 실행해보자 
+
+```{r}
+by(rexam$exam, rexam$uni, shapiro.test)
+
+by(rexam$numeracy, rexam$uni, shapiro.test)
+```
+
+### 5.6.2 샤피로_윌크 검정의 보고
+
+샤피로 월크 검정의 출력에는W 라는 검정 통계량이있다
+다음과 같은 형태로 보고할수 있다
+
+*샤피로 _윌크 검정 점수들의 분포가 정규 분포와 유의하게 다른지 판정한는데 사용할수 있다
+
+*샤피로 윌크 검정에서 유의한 결과가나왔다면,해당 점수들은 정규분포와 유의하게 다른것이다
+
+*그렇지 않으면 점수들은 대략 정규분포를 따른다
